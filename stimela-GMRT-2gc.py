@@ -360,7 +360,7 @@ recipe.add("cab/calibrator", "calibrator_Gjones_subtract_lsm0",
                "Gjones-solution-intervals" : [18,10], # Ad-hoc right now, subject to change (18 time slot ~ 5 min, 10 channel)
                #"correlations"       :  '2x2, diagonal terms only', # Added  
                "Gjones-matrix-type" : "GainDiagPhase", # Support class to handle a set of subtiled gains in the form of diagonal G matrices with phase-only solutions
-               "make-plots"         : False,
+               "make-plots"         : True,
                "DDjones-smoothing-intervals" : 1,
                "Gjones-ampl-clipping"  :   True,
                "Gjones-ampl-clipping-low"  :   0.15,
@@ -656,14 +656,14 @@ recipe.add("cab/calibrator", "calibrator_Gjones_subtract_lsm3",
                "output-data"        : "CORR_RES", # Final residual data
                "Gjones"             : True,
                "Gjones-solution-intervals" : [20,10], # Ad-hoc right now, subject to change (20 time slot ~ 5.33 min, 10 channel)
-               "correlations"       :  '2x2, diagonal terms only', # Added  
+               #"correlations"       :  '2x2, diagonal terms only', # Added  
                "Gjones-matrix-type" : "Gain2x2", # amp & phase. 
                "make-plots"         : False,
                "DDjones-smoothing-intervals" : 1,
-               "Gjones-ampl-clipping"  :   True,
+               "Gjones-ampl-clipping"  :   True, # True
                "Gjones-ampl-clipping-low"  :   0.15,
-               #"Gjones-ampl-clipping-high"  :   3.5,
-               "Gjones-thresh-sigma" :  5,
+               "Gjones-ampl-clipping-high"  :   3.5,
+               "Gjones-thresh-sigma" :  10, # 5
                "Gjones-chisq-clipping" : False,
                "tile-size"          : 512,
                "field-id"           : int(TARGET),
@@ -742,35 +742,37 @@ recipe.add('cab/wsclean', 'image_target_field_r10',
         label="image_target_field10::Image the Residual Visibility")
 
 ################################################################################################
-'''
+
 tstart = time.time()
 t = time.time()
 
 recipe.run([
-    "plot_amp_uvdist_RR",
-    "plot_amp_uvdist_LL",
-    "image_target_field_r0",
-    "mask0", 
-    "image_target_field_r1",
-    "mask1",
-    "image_target_field_r2",
-    "mask2",
-    "image_target_field_r3",
-    "mask3",
-    "image_target_field_r4",
-    "cube_target_field",
-    "extract_init_model",
-    "prepms",
-    "backup_initial_flags",
-    "move_corrdata_to_data",
-    "prepms",
-    "backup_initial_flags",
+#    "plot_amp_uvdist_RR",
+#    "plot_amp_uvdist_LL",
+#    "image_target_field_r0",
+#    "mask0", 
+#    "image_target_field_r1",
+#    "mask1",
+#    "image_target_field_r2",
+#    "mask2",
+#    "image_target_field_r3",
+#    "mask3",
+#    "image_target_field_r4",
+#    "cube_target_field",
+#    "extract_init_model",
+#    "prepms",
+#    "backup_initial_flags",
+#    "move_corrdata_to_data",
+#    "prepms",
+#    "backup_initial_flags",
     "calibrator_Gjones_subtract_lsm0",
 ])
 
 t1 = time.time() - t   
 
 print "\n2gc self-cal1 done in %.2f sec\n" %(t1)
+
+sys.exit()
 
 #######################################################################################
 # Copy MS after 1st round of self-cal
@@ -804,19 +806,19 @@ print "\n2gc self-cal2 done in %.2f sec\n" %(t2)
 MS_SELF2 = MS[:-3] + '.SELFCAL2.MS' 
 
 os.system("cp -r %s/%s %s/%s" %(MSDIR, MS, MSDIR, MS_SELF2))
-'''
+
 #####################################################################################
 
 t = time.time()
 
 recipe.run([
-#    "image_target_field7",
-#    "mask5",
-#    "image_target_field8",
-#    "extract_pselfcal2_model",
-#    "unflag_pselfcalflags",
-#    "stitch_lsm23",
-#    "move_corrdata_to_data",
+    "image_target_field7",
+    "mask5",
+    "image_target_field8",
+    "extract_pselfcal2_model",
+    "unflag_pselfcalflags",
+    "stitch_lsm23",
+    "move_corrdata_to_data",
     "calibrator_Gjones_subtract_lsm3",
 ])
 
