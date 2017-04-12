@@ -141,37 +141,6 @@ recipe.add('cab/wsclean', 'image_target_field_r1',
     output=OUTPUT,
     label="image_target_field_r1:: Image target field second round")
 
-#####################################################################################
-
-## REMEBER TO CHANGE THRESHOLD TO AUTO THRESHOLD AND MGAIN VALUE.
-
-#####################################################################################
-
-recipe.add('cab/wsclean', 'cube_target_field', 
-           {
-               "msname"        :   MS,
-               "field"         :   TARGET,
-               "channelrange"  :   [25,220],
-               "weight"        :   "briggs 0",               # Use Briggs weighting to weigh visibilities for imaging
-               "npix"          :   npixno,                   # Image size in pixels
-               "trim"          :   trimno,                    # To avoid aliasing
-               "cellsize"      :   cellarcsec,                      # Size of each square pixel
-               "stokes"    : "I",
-               "nwlayers"  : 128,
-               "minuvw-m"  : 100.0,
-               "maxuvw-m"  : 15000.0,
-               "clean_iterations"  :   5000,
-               "gain"          : 0.05,
-               "mgain"         :   0.9,
-               "channelsout"   : 10,
-               "threshold"     : 0.0001,
-               "prefix"        : "pre-self-cal-cube"+LABEL,
-           },
-    input=INPUT,
-    output=OUTPUT,
-    label="cube_target_field:: Image cube for target field")
-
-##########################################################################
 
 lsm0 = PREFIX + '-LSM0'
 
@@ -234,8 +203,7 @@ recipe.add("cab/calibrator", "calibrator_Gjones_subtract_lsm0",
                "msname"             : MS,
                "threads"            : 16,
                "column"             : "DATA",
-               "output-column"      : "CORRECTED_DATA",    
-               "output-data"        : "CORR_RES", # Corr_Data (gain applied) - Model
+               "output-data"        : "CORR_RES", # Corr_Data (gain applied) - Model in CORRECTED_DATA column
                "Gjones"             : True,
                "Gjones-solution-intervals" : [18,10], # Ad-hoc right now, subject to change (18 time slot ~ 5 min, 10 channel)
                "correlations"       :  '2x2, diagonal terms only', # Added  
@@ -383,7 +351,6 @@ recipe.add("cab/calibrator", "calibrator_Gjones_subtract_lsm1",
                "msname"             : MS,
                "threads"            : 16,
                "column"             : "DATA",
-               "output-column"      : "CORRECTED_DATA",    
                "output-data"        : "CORR_RES", # Corr_Data (gain applied) - Model
                "Gjones"             : True,
                "Gjones-solution-intervals" : [12,10], # Ad-hoc right now, subject to change (12 time slot ~ 3 min, 10 channel)
@@ -512,7 +479,7 @@ recipe.add("cab/tigger_convert", "stitch_lsms1",
 
 #############################################################
 
-# Third selfcal round with amp & phase
+# Third selfcal round with amp & phase on the residual data
 
 ############################################################
 
@@ -532,10 +499,9 @@ recipe.add("cab/calibrator", "calibrator_Gjones_subtract_lsm3",
                "msname"             : MS,
                "threads"            : 16,
                "column"             : "DATA",
-               "output-column"      : "CORRECTED_DATA",    
                "output-data"        : "CORR_RES", # Final residual data
                "Gjones"             : True,
-               "Gjones-solution-intervals" : [30,20], # Ad-hoc right now, subject to change (20 time slot ~ 5.33 min, 10 channel)
+               "Gjones-solution-intervals" : [20,20], # Ad-hoc right now, subject to change (20 time slot ~ 5.33 min, 20 channel)
                #"correlations"       :  '2x2, diagonal terms only', # Added  
                "Gjones-matrix-type" : "Gain2x2", # amp & phase. 
                "make-plots"         : False,
@@ -553,9 +519,15 @@ recipe.add("cab/calibrator", "calibrator_Gjones_subtract_lsm3",
            label="calibrator_Gjones_subtract_lsm3:: Calibrate and subtract LSM3")
 
 
+####################################################
+
+# Check the Residual visibility by Imaging
+
+####################################################
+
 imname6 = PREFIX + "image6"
 
-recipe.add('cab/wsclean', 'image_target_field_r6', 
+recipe.add('cab/wsclean', 'image_restarget_field_r6', 
            {
                "msname"        :   MS,
                "field"         :   TARGET,
@@ -576,32 +548,41 @@ recipe.add('cab/wsclean', 'image_target_field_r6',
                "prefix"        : "%s:output"%(imname6),
            },
         input=INPUT, output=OUTPUT,
-        label="image_target_field6::Image the target field after amp & phase selfcal")
+        label="image_restarget_field6::Image the residual visibility after amp & phase selfcal")
 
-####################################################
+################################################################################################
+# Predict with the final lsm model & add the residual data to produce the self-calibrated image
 
-# Check the Residual visibility by Imaging
+################################################################################################
 
-####################################################
+recipe.add('cab/simulator_dict', 'simulate_modelvis_addres', 
+           {
+               "msname"    :   MS,
+               "skymodel"  :   lsm4,                    # Sky model to simulate into MS
+               "mode"      : add,
+               "input-column"    :   "CORRECTED_DATA",
+               "column"     : "RESPLUSMODEL_DATA" 
+           },
+        input=INPUT, output=OUTPUT,
+        label="simulate_modelvis_addres::Simulate model visibility and add residual")
 
-recipe.add("cab/msutils", "move_corrdata_to_data", 
+recipe.add("cab/msutils", "move_resmodeldata_to_corrdata", 
            {
                "command"           : "copycol",
                "msname"            : MS,
-               "fromcol"           : "CORR_RES",
-               "tocol"             : "DATA",
+               "fromcol"           : "RESPLUSMODEL_DATA",
+               "tocol"             : "CORRECTED_DATA",
            },
         input=INPUT, output=OUTPUT,
-        label="move_corrres_to_data::msutils")
+        label="move_resmodeldata_to_corrdata::msutils")
 
 
 imname7 = PREFIX + "image7"
 
-recipe.add('cab/wsclean', 'image_target_field_r7', 
+recipe.add('cab/wsclean', 'finalimage_target_field_r7', 
            {
                "msname"        :   MS,
                "field"         :   TARGET,
-               "column"        :   "DATA",
                "channelrange"  :   [25,220],        
                "weight"        :   "briggs 0",               # Use Briggs weighting to weigh visibilities for imaging
                "npix"          :   npixno,                   # Image size in pixels
@@ -619,9 +600,10 @@ recipe.add('cab/wsclean', 'image_target_field_r7',
                "prefix"        : "%s:output"%(imname7),
            },
         input=INPUT, output=OUTPUT,
-        label="image_target_field7::Image the Residual Visibility")
+        label="finalimage_target_field7::Image the model + residual visibility to produce final image")
 
-################################################################################################
+
+####################################################################################################
 
 tstart = time.time()
 t = time.time()
@@ -632,7 +614,6 @@ recipe.run([
     "image_target_field_r0",
     "mask0", 
     "image_target_field_r1",
-    "cube_target_field",
     "extract_init_model",
     "prepms",
     "backup_initial_flags",
@@ -694,6 +675,7 @@ recipe.run([
     "stitch_lsm23",
     "move_corrdata_to_data",
     "calibrator_Gjones_subtract_lsm3",
+    "image_restarget_field6",
 ])
 
 t3 = time.time() - t  
@@ -701,12 +683,22 @@ t3 = time.time() - t
 print "\n2gc self-cal3 done in %.2f sec\n" %(t3)
 
 #######################################################################################
-# Copy MS after 3rd round of self-cal
+# Copy MS after 3rd round of self-cal. It has the residual data
 
 MS_SELF3 = MS[:-3] + '.SELFCAL3.MS' 
 
 os.system("cp -r %s/%s %s/%s" %(MSDIR, MS, MSDIR, MS_SELF3))
 
 #####################################################################################
+
+# To produce the final image
+
+############################################################################
+
+recipe.run([
+    "simulate_modelvis_addres",
+    "move_resmodeldata_to_corrdata",
+    "finalimage_target_field7",
+])
 
 
