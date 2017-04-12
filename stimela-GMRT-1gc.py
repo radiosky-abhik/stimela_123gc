@@ -53,6 +53,12 @@ gain_cal = "2" # J1035+5628
 refant = "7"
 BADANT = '30,W06' # (W06: Antenna 30)
 
+# Image parameters
+
+npixno = 5120
+trimno = 4096
+cellarcsec = 1.5
+
 ############################################################################
 
 # So that we can access GLOBALS pass through to the run command
@@ -338,9 +344,9 @@ recipe.add('cab/wsclean', 'image_target_field',
                "field"         :   target,
                "channelrange"  :   [25,220],
                "weight"        :   "briggs 0",               # Use Briggs weighting to weigh visibilities for imaging
-               "npix"          :   5120,                   # Image size in pixels
-               "trim"          :   4096,                    # To avoid aliasing
-               "cellsize"      :   2,                      # Size of each square pixel
+               "npix"          :   npixno,                   # Image size in pixels
+               "trim"          :   trimno,                    # To avoid aliasing
+               "cellsize"      :   cellarcsec,                      # Size of each square pixel
                "stokes"    : "I",
                "nwlayers"  : 128,
                "minuvw-m"  : 100.0,
