@@ -20,8 +20,8 @@ SPW = '0:21~225'
 
 # Image parameters
 
-npixno = 5120
-trimno = 4096
+npixno = 7168
+trimno = 5120
 cellarcsec = 1.5
 
 # Calibration tables
@@ -108,7 +108,7 @@ recipe.add('cab/cleanmask', 'mask0',
                "image"  : '%s-image.fits:output' %(imname0),
                "output" : '%s:output' %(maskname0),
                "dilate" : False,
-               "sigma"  : 25,
+               "sigma"  : 15,
            },
     input=INPUT,
     output=OUTPUT,
@@ -257,7 +257,7 @@ recipe.add('cab/cleanmask', 'mask1',
                "image"  : '%s-image.fits:output' %(imname2),
                "output" : '%s:output' %(maskname1),
                "dilate" : False,
-               "sigma"  : 20,
+               "sigma"  : 10,
            },
     input=INPUT,
     output=OUTPUT,
@@ -405,7 +405,7 @@ recipe.add('cab/cleanmask', 'mask2',
                "image"  : '%s-image.fits:output' %(imname4),
                "output" : '%s:output' %(maskname2),
                "dilate" : False,
-               "sigma"  : 15,
+               "sigma"  : 5,
            },
     input=INPUT,
     output=OUTPUT,
@@ -501,14 +501,14 @@ recipe.add("cab/calibrator", "calibrator_Gjones_subtract_lsm3",
                "column"             : "DATA",
                "output-data"        : "CORR_RES", # Final residual data
                "Gjones"             : True,
-               "Gjones-solution-intervals" : [20,20], # Ad-hoc right now, subject to change (20 time slot ~ 5.33 min, 20 channel)
+               "Gjones-solution-intervals" : [30,20], # Ad-hoc right now, subject to change (20 time slot ~ 5.33 min, 20 channel)
                "correlations"       :  '2x2, diagonal terms only', # Added  
                "Gjones-matrix-type" : "Gain2x2", # amp & phase. 
                "make-plots"         : False,
                "DDjones-smoothing-intervals" : 1,
-               "Gjones-ampl-clipping"  :   False, # True
+               "Gjones-ampl-clipping"  :   True, # True
                "Gjones-ampl-clipping-low"  :   0.15,
-               "Gjones-ampl-clipping-high"  :   3.5,
+               #"Gjones-ampl-clipping-high"  :   3.5,
                "Gjones-thresh-sigma" :  10, # 5
                "Gjones-chisq-clipping" : False,
                "tile-size"          : 512,
@@ -525,7 +525,7 @@ recipe.add("cab/calibrator", "calibrator_Gjones_subtract_lsm3",
 
 ####################################################
 
-imname6 = PREFIX + "resimage"
+imname6 = PREFIX + "-resimage"
 
 recipe.add('cab/wsclean', 'image_restarget_field_r6', 
            {
@@ -571,7 +571,6 @@ recipe.add("cab/tigger_restore", "restore_image",
 
 tstart = time.time()
 
-'''
 t = time.time()
 
 recipe.run([
@@ -592,6 +591,8 @@ recipe.run([
 t1 = time.time() - t   
 
 print "\n2gc self-cal1 done in %.2f sec\n" %(t1)
+
+sys.exit()
 
 #######################################################################################
 # Copy MS after 1st round of self-cal
@@ -626,14 +627,13 @@ MS_SELF2 = MS[:-3] + '.SELFCAL2.MS'
 
 os.system("cp -r %s/%s %s/%s" %(MSDIR, MS, MSDIR, MS_SELF2))
 
-'''
 #####################################################################################
 
 t = time.time()
 
 recipe.run([
 #    "image_target_field4",
-#    "mask2",
+    "mask2",
 #    "image_target_field5",
 #    "extract_pselfcal2_model",
 #    "unflag_pselfcalflags",
@@ -641,7 +641,7 @@ recipe.run([
 #    "move_corrdata_to_data",
 #    "calibrator_Gjones_subtract_lsm3",
 #    "image_restarget_field6",
-    "restore_image",
+#    "restore_image",
 ])
 
 t3 = time.time() - t  
@@ -650,11 +650,11 @@ print "\n2gc self-cal3 done in %.2f sec\n" %(t3)
 
 #######################################################################################
 # Copy MS after 3rd round of self-cal. It has the residual data
-
+'''
 MS_SELF3 = MS[:-3] + '.SELFCAL3.MS' 
 
 os.system("cp -r %s/%s %s/%s" %(MSDIR, MS, MSDIR, MS_SELF3))
-
+'''
 #####################################################################################
 
 
