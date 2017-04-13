@@ -478,14 +478,14 @@ recipe.add("cab/tigger_convert", "stitch_lsms1",
 
 ##############################################################
 
-# Use tigger restore to pruce the final image
+# Use tigger restore to produce the final image
 
-imname6 = PREFIX + "final"
+imname6 = PREFIX + "-final"
 
 recipe.add("cab/tigger_restore", "restore_image", 
            {
                "input-image"   :  '%s-image.fits:output' %(imname5), # res img
-               "input-skymodel"   : lsm4,
+               "input-skymodel"   : "%s.lsm.html:output"%(lsm4),
                "output-image"   :  '%s-image.fits:output' %(imname6),
                
            },
@@ -501,8 +501,8 @@ recipe.add("cab/tigger_restore", "restore_image",
 recipe.add('cab/simulator_dict', 'simulate_modelvis_addres', 
            {
                "msname"    :   MS,
-               "skymodel"  :   lsm4,                    # Sky model to simulate into MS
-               "mode"      : add,
+               "skymodel"  :   "%s.lsm.html:output"%(lsm4),                    # Sky model to simulate into MS
+               "mode"      : "add",
                "input-column"    :   "CORRECTED_DATA",
                "column"     : "RESPLUSMODEL_DATA" 
            },
@@ -568,7 +568,7 @@ recipe.add("cab/calibrator", "calibrator_Gjones_subtract_lsm4",
 
 ####################################################
 
-imname7 = PREFIX + "resimage"
+imname7 = PREFIX + "-resimage"
 
 recipe.add('cab/wsclean', 'image_restarget_field_r6', 
            {
@@ -596,6 +596,8 @@ recipe.add('cab/wsclean', 'image_restarget_field_r6',
 ####################################################################################################
 
 tstart = time.time()
+
+
 t = time.time()
 
 recipe.run([
@@ -622,7 +624,7 @@ sys.exit()
 #######################################################################################
 # Copy MS after 1st round of self-cal
 
-MS_SELF1 = MS[:-3] + '.SELFCAL1.MS' 
+MS_SELF1 = MS[:-3] + '.APSELFCAL1.MS' 
 
 os.system("cp -r %s/%s %s/%s" %(MSDIR, MS, MSDIR, MS_SELF1))
 
@@ -648,7 +650,7 @@ print "\n2gc self-cal2 done in %.2f sec\n" %(t2)
 #######################################################################################
 # Copy MS after 2nd round of self-cal
 
-MS_SELF2 = MS[:-3] + '.SELFCAL2.MS' 
+MS_SELF2 = MS[:-3] + '.APSELFCAL2.MS' 
 
 os.system("cp -r %s/%s %s/%s" %(MSDIR, MS, MSDIR, MS_SELF2))
 
@@ -678,7 +680,7 @@ print "\n2gc self-cal3 done in %.2f sec\n" %(t3)
 #######################################################################################
 # Copy MS after 3rd round of self-cal. It has the residual data.
 
-MS_SELF3 = MS[:-3] + '.SELFCAL3.MS' 
+MS_SELF3 = MS[:-3] + '.APSELFCAL3.MS' 
 
 os.system("cp -r %s/%s %s/%s" %(MSDIR, MS, MSDIR, MS_SELF3))
 
