@@ -208,7 +208,7 @@ recipe.add("cab/calibrator", "calibrator_Gjones_subtract_lsm0",
                "Gjones-solution-intervals" : [18,10], # Ad-hoc right now, subject to change (18 time slot ~ 5 min, 10 channel)
                "correlations"       :  '2x2, diagonal terms only', # Added  
                "Gjones-matrix-type" : "GainDiagPhase", # Support class to handle a set of subtiled gains in the form of diagonal G matrices with phase-only solutions
-               "make-plots"         : True,
+               "make-plots"         : False,
                "DDjones-smoothing-intervals" : 1,
                "Gjones-ampl-clipping"  :   True,
                "Gjones-ampl-clipping-low"  :   0.15,
@@ -569,6 +569,8 @@ recipe.add("cab/tigger_restore", "restore_image",
 ####################################################################################################
 
 tstart = time.time()
+
+'''
 t = time.time()
 
 recipe.run([
@@ -589,8 +591,8 @@ recipe.run([
 t1 = time.time() - t   
 
 print "\n2gc self-cal1 done in %.2f sec\n" %(t1)
+'''
 
-sys.exit()
 
 #######################################################################################
 # Copy MS after 1st round of self-cal
@@ -625,6 +627,7 @@ MS_SELF2 = MS[:-3] + '.SELFCAL2.MS'
 
 os.system("cp -r %s/%s %s/%s" %(MSDIR, MS, MSDIR, MS_SELF2))
 
+sys.exit()
 #####################################################################################
 
 t = time.time()

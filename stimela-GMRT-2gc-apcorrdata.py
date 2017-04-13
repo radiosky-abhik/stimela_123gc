@@ -208,7 +208,7 @@ recipe.add("cab/calibrator", "calibrator_Gjones_subtract_lsm0",
                "Gjones-solution-intervals" : [18,10], # Ad-hoc right now, subject to change (18 time slot ~ 5 min, 10 channel)
                "correlations"       :  '2x2, diagonal terms only', # Added  
                "Gjones-matrix-type" : "GainDiagPhase", # Support class to handle a set of subtiled gains in the form of diagonal G matrices with phase-only solutions
-               "make-plots"         : True,
+               "make-plots"         : False,
                "DDjones-smoothing-intervals" : 1,
                "Gjones-ampl-clipping"  :   True,
                "Gjones-ampl-clipping-low"  :   0.15,
