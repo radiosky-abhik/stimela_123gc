@@ -22,7 +22,7 @@ import stimela
 import time
 
 INPUT = "input"
-OUTPUT = "output"
+OUTPUT = "output_1gc"
 MSDIR  = "msdir"
 
 msname = "26_019_12MAY2014.LTA_RRLL.RRLLFITS.MS"
@@ -55,8 +55,8 @@ BADANT = '30,W06' # (W06: Antenna 30)
 
 # Image parameters
 
-npixno = 5120
-trimno = 4096
+npixno = 7168
+trimno = 5120
 cellarcsec = 1.5
 
 ############################################################################
@@ -146,16 +146,6 @@ recipe.add("cab/rfimasker", "mask_stuff",
     input=INPUT, output=OUTPUT,
     label="mask::maskms")
 
-recipe.add("cab/autoflagger", "auto_flag_rfi",
-    {
-        "msname"    : msname,
-        "column"    : "DATA",
-        "field"     : "0,1,2",
-        "strategy"  : strategy_file,
-    },
-    input=INPUT, output=OUTPUT,
-    label="autoflag:: Auto Flagging ms")
-
 #############################################################
 
 ## 1GC Calibration
@@ -176,7 +166,7 @@ recipe.add('cab/casa_setjy', 'set_flux_scaling',
 recipe.add("cab/casa_gaincal", "init_phase_cal",
     {
         "msname"        :   msname,
-        "uvrange"       : '1~25klambda', 
+        "uvrange"       : '1~25klambda',  # Not using short baselines
         "caltable"      :   PHASECAL_TABLE,
         "field"         :   bandpass_cal,
         "refant"        :   refant,
@@ -227,8 +217,8 @@ recipe.add("cab/casa_bandpass", "bandpass_cal",
         "bandtype"      :   'B',
         "minblperant"   :   1,
         "minsnr"        :   3, 
-        #"gaintable"     :   [PHASECAL_TABLE, DELAYCAL_TABLE],
-        "gaintable"     :   [PHASECAL_TABLE],
+        "gaintable"     :   [PHASECAL_TABLE, DELAYCAL_TABLE],
+        #"gaintable"     :   [PHASECAL_TABLE],
     },
     input=INPUT, output=OUTPUT,
     label="bandpass:: First bandpass calibration")
@@ -351,11 +341,11 @@ recipe.add('cab/wsclean', 'image_target_field',
                "nwlayers"  : 128,
                "minuvw-m"  : 100.0,
                "maxuvw-m"  : 15000.0,
-               "clean_iterations"  :   5000,
-               #        "gain"          : 0.05,
+               "clean_iterations"  :   100000,
+               "gain"          : 0.05,
                "mgain"         : 0.9, 
-               #"auto-threshold"     : 5,
-               "threshold"     : 0.0001, #Jy
+               "auto-threshold"     : 10,
+               #"threshold"     : 0.0001, #Jy
                "prefix"        : LABEL,
                "no-update-model-required" : True,
            },
@@ -395,7 +385,7 @@ recipe.run([
            "aoflag_data",
            "set_flux_scaling",
            "phase0",
-#           "delay_cal",
+           "delay_cal",
            "bandpass",
            "gaincal",
            "fluxscale",
