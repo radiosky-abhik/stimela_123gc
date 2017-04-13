@@ -502,11 +502,11 @@ recipe.add("cab/calibrator", "calibrator_Gjones_subtract_lsm3",
                "output-data"        : "CORR_RES", # Final residual data
                "Gjones"             : True,
                "Gjones-solution-intervals" : [20,20], # Ad-hoc right now, subject to change (20 time slot ~ 5.33 min, 20 channel)
-               #"correlations"       :  '2x2, diagonal terms only', # Added  
+               "correlations"       :  '2x2, diagonal terms only', # Added  
                "Gjones-matrix-type" : "Gain2x2", # amp & phase. 
                "make-plots"         : False,
                "DDjones-smoothing-intervals" : 1,
-               "Gjones-ampl-clipping"  :   True, # True
+               "Gjones-ampl-clipping"  :   False, # True
                "Gjones-ampl-clipping-low"  :   0.15,
                "Gjones-ampl-clipping-high"  :   3.5,
                "Gjones-thresh-sigma" :  10, # 5
@@ -553,12 +553,13 @@ recipe.add('cab/wsclean', 'image_restarget_field_r6',
 ################################################################################################
 # Use tigger restore to pruce the final image
 
-imname7 = PREFIX + "final"
+imname7 = PREFIX + "-final"
 
 recipe.add("cab/tigger_restore", "restore_image", 
            {
-               "input-image"   :  '%s-image.fits:output' %(imname6), # res img
-               "input-skymodel"   : lsm4,
+               #"input-image"   :  '%s-image.fits:output' %(imname6), # res img after amp & phase self-cal
+               "input-image"   :  '%s-image.fits:output' %(imname5), # res img after 2 rounds of phase self-cal
+               "input-skymodel"  : "%s.lsm.html:output"%(lsm4),
                "output-image"   :  '%s-image.fits:output' %(imname7),
                
            },
@@ -591,8 +592,6 @@ recipe.run([
 t1 = time.time() - t   
 
 print "\n2gc self-cal1 done in %.2f sec\n" %(t1)
-'''
-
 
 #######################################################################################
 # Copy MS after 1st round of self-cal
@@ -627,21 +626,21 @@ MS_SELF2 = MS[:-3] + '.SELFCAL2.MS'
 
 os.system("cp -r %s/%s %s/%s" %(MSDIR, MS, MSDIR, MS_SELF2))
 
-sys.exit()
+'''
 #####################################################################################
 
 t = time.time()
 
 recipe.run([
-    "image_target_field4",
-    "mask2",
-    "image_target_field5",
-    "extract_pselfcal2_model",
-    "unflag_pselfcalflags",
-    "stitch_lsm23",
-    "move_corrdata_to_data",
-    "calibrator_Gjones_subtract_lsm3",
-    "image_restarget_field6",
+#    "image_target_field4",
+#    "mask2",
+#    "image_target_field5",
+#    "extract_pselfcal2_model",
+#    "unflag_pselfcalflags",
+#    "stitch_lsm23",
+#    "move_corrdata_to_data",
+#    "calibrator_Gjones_subtract_lsm3",
+#    "image_restarget_field6",
     "restore_image",
 ])
 
