@@ -66,8 +66,11 @@ stimela.register_globals()
 
 recipe = stimela.Recipe("GMRT LH reduction script", ms_dir=MSDIR)
 
-# It is common for the array to require a small amount of time to settle down at the start of a scan. Consequently, it has
-# become standard practice to flag the initial samples from the start of each scan. This is known as 'quack' flagging
+# It is common for the array to require a small amount of time to
+# settle down at the start of a scan. Consequently, it has become
+# standard practice to flag the initial samples from the start of each
+# scan. This is known as 'quack' flagging
+
 recipe.add('cab/casa_flagdata', 'quack_flagging', 
            {
                "msname"           :   msname,
@@ -79,7 +82,7 @@ recipe.add('cab/casa_flagdata', 'quack_flagging',
     output = OUTPUT,
     label = 'quack_flagging:: Quack flagging')
 
-#Flag the autocorrelations
+# Flag the autocorrelations
 
 recipe.add('cab/casa_flagdata', 'autocorr_flagging', 
            {
@@ -91,7 +94,8 @@ recipe.add('cab/casa_flagdata', 'autocorr_flagging',
     output = OUTPUT,
     label = 'autocorr_flagging:: Autocorrelations flagging')
 
-#Flag potentially pesky antennas
+# Flag potentially pesky antennas
+
 recipe.add('cab/casa_flagdata', 'antenna_flagging', 
            {
                "vis"           :   msname,
@@ -125,8 +129,9 @@ recipe.add("cab/casa_flagdata", "flag_bad_end_channels",
         label="flag_bandend:: Flag end of band")
 
 
-#Autoflagging (With Aoflagger) - This is supposed to flag RFI in the data - good to flag prior to 
-#starting the calibration process.
+# Autoflagging (With Aoflagger) - This is supposed to flag RFI in the
+# data - good to flag prior to starting the calibration process.
+
 recipe.add('cab/autoflagger', 'aoflag_data', 
            {
                "msname"    :   msname,
@@ -146,9 +151,73 @@ recipe.add("cab/rfimasker", "mask_stuff",
     input=INPUT, output=OUTPUT,
     label="mask::maskms")
 
+#######################################
+
+# Plot overview of the observation
+
+recipe.add('cab/casa_plotms', 'plot_aflag_obsoverview', 
+           {
+               "msname"           :   msname,
+               "selectdata"    : True,
+               "correlation"    : 'RR,LL',
+               "averagedata"   : True,
+               "avgchannel"    : '16',
+               "coloraxis"     : 'field',
+               "plotfile"      :   PREFIX+'after_manual_flags.png',
+               "overwrite"     :   True,
+           },
+    input=INPUT,
+    output=OUTPUT,
+    label='plot_aflag_obsoverview:: Plot amplitude vs time')
+
+# Plot amplitude vs uv distance
+
+recipe.add('cab/casa_plotms', 'plot_amp_uvdist', 
+           {
+               "vis"           :   msname,
+               "plotfile"      :   PREFIX + 'initial_amp_uvdist.png',
+               "xaxis"         :   "uvdist",
+               "yaxis"         :   "amp",
+               "selectdata"    :    True,
+               "correlation"   :   'RR,LL',
+               "averagedata"   :   True,
+               "avgchannel"    :   '16',
+               "coloraxis"     :   'field',
+               "overwrite"     :   True,
+           },
+    input = INPUT,
+    output = OUTPUT,
+    label = 'plot_amp_uvdist:: Plot amplitude vs distance')
+
+
+# One final useful plot we will make is a datastream plot of the
+# antenna2 in a baseline for the data versus refant. This shows,
+# assuming that refant is in the entire observation, when various
+# antennas drop out.
+
+# Plot antenna dropout
+
+recipe.add('cab/casa_plotms', 'antenna_dropout', 
+           {
+               "vis"       :   msname,
+               "plotfile"  :   msname + '-antenna_dropout.png',
+               "xaxis"     :   'time',
+               "yaxis"     :   'antenna2',
+               "spw"       :   SPW_delay_cal,
+               "antenna"   :   refant,
+               "selectdata":   True,
+               "coloraxis" :   'field',
+               "overwrite" :   True,
+           },
+    input = INPUT,
+    output = OUTPUT,
+    label = "antenna_dropout:: Plot antenna dropout")
+
+
 #############################################################
 
 ## 1GC Calibration
+
 recipe.add('cab/casa_setjy', 'set_flux_scaling', 
            {
                "msname"           :   msname,
@@ -170,12 +239,72 @@ recipe.add("cab/casa_gaincal", "init_phase_cal",
         "caltable"      :   PHASECAL_TABLE,
         "field"         :   bandpass_cal,
         "refant"        :   refant,
+        "gaintype"      :   'G',
         "calmode"       :   'p',
         "solint"        :   '65s',
         "minsnr"        :   3,
     },
     input=INPUT, output=OUTPUT,
     label="phase0:: Initial phase calibration")
+
+########################################
+
+# Plot phase_cal(PHASECAL_TABLE) in time Vs amp & phase
+
+recipe.add('cab/casa_plotms', 'plot_phasecal_amp_R', 
+           {
+               "vis"  :   PHASECAL_TABLE,
+               "correlation" :   'R',
+               "xaxis"     :   'time',
+               "yaxis"     :   'GainAmp',
+               "field"     :   phase_cal,
+               "figfile"   :   PREFIX+'amp-time-R.png',
+           },
+    input=INPUT,
+    output=OUTPUT,
+    label='plot_phasecal_amp_R:: Plot gaincal table. AMP, R')
+
+recipe.add('cab/casa_plotms', 'plot_phasecal_amp_L', 
+           {
+               "vis"  :   PHASECAL_TABLE,
+               "correlation" :   'L',
+               "xaxis"     :   'time',
+               "yaxis"     :   'GainAmp',
+               "field"     :   phase_cal,
+               "figfile"   :   PREFIX+'amp-time-L.png',
+           },
+    input=INPUT,
+    output=OUTPUT,
+    label='plot_phasecal_amp_L:: Plot gaincal table. AMP, L')
+
+recipe.add('cab/casa_plotms', 'plot_phasecal_phase_R', 
+           {
+               "vis"  :   PHASECAL_TABLE,
+               "correlation" :   'R',
+               "xaxis"     :   'time',
+               "yaxis"     :   'GainPhase',
+               "field"     :   phase_cal,
+               "figfile"   :   PREFIX+'phase-time-R.png',
+           },
+    input=INPUT,
+    output=OUTPUT,
+    label='plot_phasecal_phase_R:: Plot gaincal table. PHASE, R')
+
+recipe.add('cab/casa_plotms', 'plot_phasecal_phase_L', 
+           {
+               "vis"  :   PHASECAL_TABLE,
+               "correlation" :   'L',
+               "xaxis"     :   'time',
+               "yaxis"     :   'GainPhase',
+               "field"     :   phase_cal,
+               "figfile"   :   PREFIX+'phase-time-L.png',
+           },
+    input=INPUT,
+    output=OUTPUT,
+    label='plot_phasecal_phase_L:: Plot gaincal table. PHASE, L')
+
+###############################################
+
 
 # The first stage of bandpass calibration involves solving for the antenna-based delays which put a phase ramp versus
 # frequency channel in each spectral window. The K gain type in gaincal solves for the relative delays of each
@@ -223,6 +352,65 @@ recipe.add("cab/casa_bandpass", "bandpass_cal",
     input=INPUT, output=OUTPUT,
     label="bandpass:: First bandpass calibration")
 
+###############################################################
+
+# Plot bandpass_cal(BPASSCAL_TABLE) chan vs amp/phase 
+
+recipe.add('cab/casa_plotms', 'plot_bandpass_amp_R', 
+           {
+               "vis"  :   BPASSCAL_TABLE,
+               "correlation" :   'R',
+               "xaxis"     :   'chan',
+               "yaxis"     :   'GainAmp',
+               "field"     :   bandpass_cal,
+               "figfile"   :   PREFIX+'-B0-R-amp.png',
+           },
+    input=INPUT,
+    output=OUTPUT,
+    label='plot_bandpass_amp_R:: Plot bandpass table. AMP, R')
+
+recipe.add('cab/casa_plotms', 'plot_bandpass_amp_L', 
+           {
+               "vis"  :   BPASSCAL_TABLE,
+               "correlation" :   'L',
+               "xaxis"     :   'chan',
+               "yaxis"     :   'GainAmp',
+               "field"     :   bandpass_cal,
+               "figfile"   :   PREFIX+'-B0-L-amp.png',
+           },
+    input=INPUT,
+    output=OUTPUT,
+    label='plot_bandpass_amp_L:: Plot bandpass table. AMP, L')
+
+
+recipe.add('cab/casa_plotms', 'plot_bandpass_phase_R', 
+           {
+               "vis"  :   BPASSCAL_TABLE,
+               "correlation" :   'R',
+               "xaxis"     :   'chan',
+               "yaxis"     :   'GainPhase',
+               "field"     :   bandpass_cal,
+               "figfile"   :   PREFIX+'-B0-R-phase.png',
+           },
+    input=INPUT,
+    output=OUTPUT,
+    label='plot_bandpass_phase_R:: Plot bandpass table. PHASE, R')
+
+recipe.add('cab/casa_plotms', 'plot_bandpass_phase_L', 
+           {
+               "vis"  :   BPASSCAL_TABLE,
+               "correlation" :   'L',
+               "xaxis"     :   'chan',
+               "yaxis"     :   'GainPhase',
+               "field"     :   bandpass_cal,
+               "figfile"   :   PREFIX+'-B0-L-phase.png',
+           },
+    input=INPUT,
+    output=OUTPUT,
+    label='plot_bandpass_phase_L:: Plot bandpass table. PHASE, L')
+
+###############################################################
+
 
 recipe.add("cab/casa_gaincal", "main_gain_calibration",
     {
@@ -244,6 +432,65 @@ recipe.add("cab/casa_gaincal", "main_gain_calibration",
     label="gaincal:: Gain calibration")
 
 
+########################################
+
+# Plot phase_cal(AMPCAL_TABLE) in time vs amp/phase
+
+recipe.add('cab/casa_plotms', 'plot_gaincal_amp_R', 
+           {
+               "vis"  :   AMPCAL_TABLE,
+               "correlation" :   'R',
+               "xaxis"     :   'time',
+               "yaxis"     :   'GainAmp',
+               "field"     :   phase_cal,
+               "figfile"   :   PREFIX+'-G1-amp-R.png',
+           },
+    input=INPUT,
+    output=OUTPUT,
+    label='plot_gaincal_amp_R:: Plot gaincal table. AMP, R')
+
+recipe.add('cab/casa_plotms', 'plot_gaincal_amp_L', 
+           {
+               "vis"  :   AMPCAL_TABLE,
+               "correlation" :   'L',
+               "xaxis"     :   'time',
+               "yaxis"     :   'GainAmp',
+               "field"     :   phase_cal,
+               "figfile"   :   PREFIX+'-G1-amp-L.png',
+           },
+    input=INPUT,
+    output=OUTPUT,
+    label='plot_gaincal_amp_L:: Plot gaincal table. AMP, L')
+
+recipe.add('cab/casa_plotms', 'plot_gaincal_phase_R', 
+           {
+               "vis"  :   AMPCAL_TABLE,
+               "correlation" :   'R',
+               "xaxis"     :   'time',
+               "yaxis"     :   'GainPhase',
+               "field"     :   phase_cal,
+               "figfile"   :   PREFIX+'-G1-phase-R.png',
+           },
+    input=INPUT,
+    output=OUTPUT,
+    label='plot_gaincal_phase_R:: Plot gaincal table. PHASE, R')
+
+recipe.add('cab/casa_plotms', 'plot_gaincal_phase_L', 
+           {
+               "vis"  :   AMPCAL_TABLE,
+               "correlation" :   'L',
+               "xaxis"     :   'time',
+               "yaxis"     :   'GainPhase',
+               "field"     :   phase_cal,
+               "figfile"   :   PREFIX+'-G1-phase-L.png',
+           },
+    input=INPUT,
+    output=OUTPUT,
+    label='plot_gaincal_phase_L:: Plot gaincal table. PHASE, L')
+
+###############################################
+
+
 recipe.add("cab/casa_fluxscale", "casa_fluxscale",
     {
         "msname"        :   msname,
@@ -255,6 +502,43 @@ recipe.add("cab/casa_fluxscale", "casa_fluxscale",
     },
         input=INPUT, output=OUTPUT,
         label="fluxscale:: Setting Fluxscale")
+
+###########################
+
+# Plot fluxscale results
+# Plot amp_cal(FLUXSCALE_TABLE) in time vs amp
+
+##########################
+
+recipe.add('cab/casa_plotms', 'plot_fluxscale_amp_R', 
+           {
+               "vis"  :   FLUXSCALE_TABLE,
+               "correlation" :   'R',
+               "xaxis"     :   'time',
+               "yaxis"     :   'GainAmp',
+               "field"     :   amp_cal,
+               "figfile"   :   PREFIX+'-FS-AMP-R.png',
+           },
+    input=INPUT,
+    output=OUTPUT,
+    label='plot_fluxscale_amp_R:: Plot fluxscale AMP, R')
+
+
+recipe.add('cab/casa_plotms', 'plot_fluxscale_amp_L', 
+           {
+               "vis"  :   FLUXSCALE_TABLE,
+               "correlation" :   'L',
+               "xaxis"     :   'time',
+               "yaxis"     :   'GainAmp',
+               "field"     :   amp_cal,
+               "figfile"   :   PREFIX+'-FS-AMP-L.png',
+           },
+    input=INPUT,
+    output=OUTPUT,
+    label='plot_fluxscale_amp_L:: Plot fluxscale AMP, L')
+
+
+###########################
 
 recipe.add("cab/casa_applycal", "apply_calibration", 
     {
@@ -284,6 +568,8 @@ recipe.add('cab/casa_flagdata', 'threshold_flagging_timefreq',
     input = INPUT,
     output = OUTPUT,
     label = 'threshold_flagging_timefreq:: Flagging above a local rms')
+
+# Plot bandpass_cal amp Vs phase
 
 recipe.add('cab/casa_plotms', 'plot_amp_phase', 
            {
