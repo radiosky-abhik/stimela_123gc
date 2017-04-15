@@ -305,13 +305,16 @@ recipe.add('cab/casa_plotms', 'plot_phasecal_phase_L',
 
 ###############################################
 
-
-# The first stage of bandpass calibration involves solving for the antenna-based delays which put a phase ramp versus
-# frequency channel in each spectral window. The K gain type in gaincal solves for the relative delays of each
-# antenna relative to the reference antenna (parameter refant), so be sure you pick one that is there for this entire scan
-# and good. This is not a full global delay, but gives one value per spw per polarization. Channel range chosen to exclude 
-#20 channels on either end of the band. Changing the field from GCAL to BPCAL, check if this makes sense. Apply both antenna position
-#correction and initial phase correction.
+# The first stage of bandpass calibration involves solving for the
+# antenna-based delays which put a phase ramp versus frequency channel
+# in each spectral window. The K gain type in gaincal solves for the
+# relative delays of each antenna relative to the reference antenna
+# (parameter refant), so be sure you pick one that is there for this
+# entire scan and good. This is not a full global delay, but gives one
+# value per spw per polarization. Channel range chosen to exclude 20
+# channels on either end of the band. Changing the field from GCAL to
+# BPCAL, check if this makes sense. Apply both antenna position
+# correction and initial phase correction.
 
 recipe.add('cab/casa_gaincal', 'delay_cal', 
            {
@@ -346,8 +349,8 @@ recipe.add("cab/casa_bandpass", "bandpass_cal",
         "bandtype"      :   'B',
         "minblperant"   :   1,
         "minsnr"        :   3, 
-        #"gaintable"     :   [PHASECAL_TABLE, DELAYCAL_TABLE],
-        "gaintable"     :   [PHASECAL_TABLE],
+        "gaintable"     :   [PHASECAL_TABLE, DELAYCAL_TABLE],
+        #"gaintable"     :   [PHASECAL_TABLE],
     },
     input=INPUT, output=OUTPUT,
     label="bandpass:: First bandpass calibration")
@@ -512,7 +515,7 @@ recipe.add("cab/casa_fluxscale", "casa_fluxscale",
 
 recipe.add('cab/casa_plotms', 'plot_fluxscale_amp_R', 
            {
-               "vis"  :   FLUXSCALE_TABLE,
+               "vis"  :   FLUXCAL_TABLE,
                "correlation" :   'R',
                "xaxis"     :   'time',
                "yaxis"     :   'GainAmp',
@@ -526,7 +529,7 @@ recipe.add('cab/casa_plotms', 'plot_fluxscale_amp_R',
 
 recipe.add('cab/casa_plotms', 'plot_fluxscale_amp_L', 
            {
-               "vis"  :   FLUXSCALE_TABLE,
+               "vis"  :   FLUXCAL_TABLE,
                "correlation" :   'L',
                "xaxis"     :   'time',
                "yaxis"     :   'GainAmp',
@@ -659,9 +662,10 @@ except stimela.PipelineException as e:
     print 'remaining {}'.format([c.label for c in e.remaining])
     raise
 '''
+# w/o plotting 
 
 t = time.time()
-
+'''
 recipe.run([
            "quack_flagging",
            "autocorr_flagging",
@@ -671,7 +675,7 @@ recipe.run([
            "aoflag_data",
            "set_flux_scaling",
            "phase0",
- #          "delay_cal",
+#          "delay_cal",
            "bandpass",
            "gaincal",
            "fluxscale",
@@ -683,4 +687,48 @@ recipe.run([
            "split_target",
            ])
   
-print "1gc done in %.2f sec" %(time.time() - t)
+print "1gc w/o plots done in %.2f sec" %(time.time() - t)
+'''
+
+# w plots
+
+recipe.run([
+    "quack_flagging",
+    "autocorr_flagging",
+    #           "antenna_flagging",
+    "flag_bandstart",
+    "flag_bandend", 
+    "aoflag_data",
+    #          "mask",
+    "plot_aflag_obsoverview",
+    "plot_amp_uvdist",
+    "antenna_dropout",
+    "set_flux_scaling",
+    "phase0",
+    "plot_phasecal_amp_R",
+    "plot_phasecal_amp_L",
+    "plot_phasecal_phase_R",
+    "plot_phasecal_phase_L",
+    "delay_cal",
+    "bandpass",
+    "plot_bandpass_amp_R",
+    "plot_bandpass_amp_L",
+    "plot_bandpass_phase_R",
+    "plot_bandpass_phase_L",
+    "gaincal",
+    "plot_gaincal_amp_R",
+    "plot_gaincal_amp_L",
+    "plot_gaincal_phase_R",
+    "plot_gaincal_phase_L",
+    "fluxscale",
+    "plot_fluxscale_amp_R",
+    "plot_fluxscale_amp_L",
+    "applycal",
+    #           "threshold_flagging_timefreq",
+    "plot_amp_phase_RR",
+    "plot_amp_phase_LL", 
+    "image_target_field",
+    "split_target",
+])
+  
+print "1gc w plots done in %.2f sec" %(time.time() - t)
