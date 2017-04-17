@@ -163,7 +163,7 @@ recipe.add('cab/casa_plotms', 'plot_aflag_obsoverview',
                "averagedata"   : True,
                "avgchannel"    : '16',
                "coloraxis"     : 'field',
-               "plotfile"      :   PREFIX+'after_manual_flags.png',
+               "plotfile"      :   PREFIX+'-after_manual_flags.png',
                "overwrite"     :   True,
            },
     input=INPUT,
@@ -175,7 +175,7 @@ recipe.add('cab/casa_plotms', 'plot_aflag_obsoverview',
 recipe.add('cab/casa_plotms', 'plot_amp_uvdist', 
            {
                "vis"           :   msname,
-               "plotfile"      :   PREFIX + 'initial_amp_uvdist.png',
+               "plotfile"      :   PREFIX + '-initial_amp_uvdist.png',
                "xaxis"         :   "uvdist",
                "yaxis"         :   "amp",
                "selectdata"    :    True,
@@ -258,7 +258,7 @@ recipe.add('cab/casa_plotms', 'plot_phasecal_amp_R',
                "xaxis"     :   'time',
                "yaxis"     :   'GainAmp',
                "field"     :   phase_cal,
-               "plotfile"   :   PREFIX+'amp-time-R.png',
+               "plotfile"   :   PREFIX+'-amp-time-R.png',
            },
     input=INPUT,
     output=OUTPUT,
@@ -271,7 +271,7 @@ recipe.add('cab/casa_plotms', 'plot_phasecal_amp_L',
                "xaxis"     :   'time',
                "yaxis"     :   'GainAmp',
                "field"     :   phase_cal,
-               "plotfile"   :   PREFIX+'amp-time-L.png',
+               "plotfile"   :   PREFIX+'-amp-time-L.png',
            },
     input=INPUT,
     output=OUTPUT,
@@ -284,7 +284,7 @@ recipe.add('cab/casa_plotms', 'plot_phasecal_phase_R',
                "xaxis"     :   'time',
                "yaxis"     :   'GainPhase',
                "field"     :   phase_cal,
-               "plotfile"   :   PREFIX+'phase-time-R.png',
+               "plotfile"   :   PREFIX+'-phase-time-R.png',
            },
     input=INPUT,
     output=OUTPUT,
@@ -297,7 +297,7 @@ recipe.add('cab/casa_plotms', 'plot_phasecal_phase_L',
                "xaxis"     :   'time',
                "yaxis"     :   'GainPhase',
                "field"     :   phase_cal,
-               "plotfile"   :   PREFIX+'phase-time-L.png',
+               "plotfile"   :   PREFIX+'-phase-time-L.png',
            },
     input=INPUT,
     output=OUTPUT,
@@ -439,6 +439,7 @@ recipe.add("cab/casa_gaincal", "main_gain_calibration",
 ########################################
 
 # Plot phase_cal(AMPCAL_TABLE) in time vs amp/phase
+# Not plotting ??
 
 recipe.add('cab/casa_plotms', 'plot_gaincal_amp_R', 
            {
@@ -630,7 +631,7 @@ recipe.add('cab/wsclean', 'image_target_field',
                "cellsize"      :   cellarcsec,                      # Size of each square pixel
                "stokes"    : "I",
                "nwlayers"  : 128,
-               #"minuvw-m"  : 100.0,
+               "minuvw-m"  : 100.0,
                #"maxuvw-m"  : 15000.0,
                "clean_iterations"  :   100000,
                "gain"          : 0.05,
@@ -699,11 +700,6 @@ print "1gc w/o plots done in %.2f sec" %(time.time() - t)
 # w plots
 
 recipe.run([
-    "image_target_field",
-])
-
-'''
-recipe.run([
     "quack_flagging",
     "autocorr_flagging",
     #           "antenna_flagging",
@@ -741,7 +737,6 @@ recipe.run([
     "image_target_field",
     "split_target",
 ])
-'''
 
 print "1gc w plots done in %.2f sec" %(time.time() - t)
 
