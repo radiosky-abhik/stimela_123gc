@@ -22,7 +22,7 @@ import stimela
 import time
 
 INPUT = "input"
-OUTPUT = "output_1gc"
+OUTPUT = "output"
 MSDIR  = "msdir"
 
 msname = "26_019_12MAY2014.LTA_RRLL.RRLLFITS.MS"
@@ -197,7 +197,7 @@ recipe.add('cab/casa_plotms', 'plot_amp_uvdist',
 
 # Plot antenna dropout
 
-recipe.add('cab/casa_plotms', 'antenna_dropout', 
+recipe.add('cab/casa_plotms', 'plot_antenna_dropout', 
            {
                "vis"       :   msname,
                "plotfile"  :   msname + '-antenna_dropout.png',
@@ -211,7 +211,7 @@ recipe.add('cab/casa_plotms', 'antenna_dropout',
            },
     input = INPUT,
     output = OUTPUT,
-    label = "antenna_dropout:: Plot antenna dropout")
+    label = "plot_antenna_dropout:: Plot antenna dropout")
 
 
 #############################################################
@@ -258,7 +258,7 @@ recipe.add('cab/casa_plotms', 'plot_phasecal_amp_R',
                "xaxis"     :   'time',
                "yaxis"     :   'GainAmp',
                "field"     :   phase_cal,
-               "figfile"   :   PREFIX+'amp-time-R.png',
+               "plotfile"   :   PREFIX+'amp-time-R.png',
            },
     input=INPUT,
     output=OUTPUT,
@@ -271,7 +271,7 @@ recipe.add('cab/casa_plotms', 'plot_phasecal_amp_L',
                "xaxis"     :   'time',
                "yaxis"     :   'GainAmp',
                "field"     :   phase_cal,
-               "figfile"   :   PREFIX+'amp-time-L.png',
+               "plotfile"   :   PREFIX+'amp-time-L.png',
            },
     input=INPUT,
     output=OUTPUT,
@@ -284,7 +284,7 @@ recipe.add('cab/casa_plotms', 'plot_phasecal_phase_R',
                "xaxis"     :   'time',
                "yaxis"     :   'GainPhase',
                "field"     :   phase_cal,
-               "figfile"   :   PREFIX+'phase-time-R.png',
+               "plotfile"   :   PREFIX+'phase-time-R.png',
            },
     input=INPUT,
     output=OUTPUT,
@@ -297,7 +297,7 @@ recipe.add('cab/casa_plotms', 'plot_phasecal_phase_L',
                "xaxis"     :   'time',
                "yaxis"     :   'GainPhase',
                "field"     :   phase_cal,
-               "figfile"   :   PREFIX+'phase-time-L.png',
+               "plotfile"   :   PREFIX+'phase-time-L.png',
            },
     input=INPUT,
     output=OUTPUT,
@@ -349,8 +349,9 @@ recipe.add("cab/casa_bandpass", "bandpass_cal",
         "bandtype"      :   'B',
         "minblperant"   :   1,
         "minsnr"        :   3, 
-        "gaintable"     :   [PHASECAL_TABLE, DELAYCAL_TABLE],
-        #"gaintable"     :   [PHASECAL_TABLE],
+        "gaintable"     :   [PHASECAL_TABLE],
+        #"gaintable"     :   [PHASECAL_TABLE, DELAYCAL_TABLE],
+        #"interp"       :   ['linear'],
     },
     input=INPUT, output=OUTPUT,
     label="bandpass:: First bandpass calibration")
@@ -366,7 +367,7 @@ recipe.add('cab/casa_plotms', 'plot_bandpass_amp_R',
                "xaxis"     :   'chan',
                "yaxis"     :   'GainAmp',
                "field"     :   bandpass_cal,
-               "figfile"   :   PREFIX+'-B0-R-amp.png',
+               "plotfile"   :   PREFIX+'-B0-R-amp.png',
            },
     input=INPUT,
     output=OUTPUT,
@@ -379,7 +380,7 @@ recipe.add('cab/casa_plotms', 'plot_bandpass_amp_L',
                "xaxis"     :   'chan',
                "yaxis"     :   'GainAmp',
                "field"     :   bandpass_cal,
-               "figfile"   :   PREFIX+'-B0-L-amp.png',
+               "plotfile"   :   PREFIX+'-B0-L-amp.png',
            },
     input=INPUT,
     output=OUTPUT,
@@ -393,7 +394,7 @@ recipe.add('cab/casa_plotms', 'plot_bandpass_phase_R',
                "xaxis"     :   'chan',
                "yaxis"     :   'GainPhase',
                "field"     :   bandpass_cal,
-               "figfile"   :   PREFIX+'-B0-R-phase.png',
+               "plotfile"   :   PREFIX+'-B0-R-phase.png',
            },
     input=INPUT,
     output=OUTPUT,
@@ -406,7 +407,7 @@ recipe.add('cab/casa_plotms', 'plot_bandpass_phase_L',
                "xaxis"     :   'chan',
                "yaxis"     :   'GainPhase',
                "field"     :   bandpass_cal,
-               "figfile"   :   PREFIX+'-B0-L-phase.png',
+               "plotfile"   :   PREFIX+'-B0-L-phase.png',
            },
     input=INPUT,
     output=OUTPUT,
@@ -446,7 +447,7 @@ recipe.add('cab/casa_plotms', 'plot_gaincal_amp_R',
                "xaxis"     :   'time',
                "yaxis"     :   'GainAmp',
                "field"     :   phase_cal,
-               "figfile"   :   PREFIX+'-G1-amp-R.png',
+               "plotfile"   :   PREFIX+'-G1-amp-R.png',
            },
     input=INPUT,
     output=OUTPUT,
@@ -459,7 +460,7 @@ recipe.add('cab/casa_plotms', 'plot_gaincal_amp_L',
                "xaxis"     :   'time',
                "yaxis"     :   'GainAmp',
                "field"     :   phase_cal,
-               "figfile"   :   PREFIX+'-G1-amp-L.png',
+               "plotfile"   :   PREFIX+'-G1-amp-L.png',
            },
     input=INPUT,
     output=OUTPUT,
@@ -472,7 +473,7 @@ recipe.add('cab/casa_plotms', 'plot_gaincal_phase_R',
                "xaxis"     :   'time',
                "yaxis"     :   'GainPhase',
                "field"     :   phase_cal,
-               "figfile"   :   PREFIX+'-G1-phase-R.png',
+               "plotfile"   :   PREFIX+'-G1-phase-R.png',
            },
     input=INPUT,
     output=OUTPUT,
@@ -480,12 +481,12 @@ recipe.add('cab/casa_plotms', 'plot_gaincal_phase_R',
 
 recipe.add('cab/casa_plotms', 'plot_gaincal_phase_L', 
            {
-               "vis"  :   AMPCAL_TABLE,
+               "vis"  :  AMPCAL_TABLE,
                "correlation" :   'L',
                "xaxis"     :   'time',
                "yaxis"     :   'GainPhase',
                "field"     :   phase_cal,
-               "figfile"   :   PREFIX+'-G1-phase-L.png',
+               "plotfile"   :   PREFIX+'-G1-phase-L.png',
            },
     input=INPUT,
     output=OUTPUT,
@@ -520,7 +521,7 @@ recipe.add('cab/casa_plotms', 'plot_fluxscale_amp_R',
                "xaxis"     :   'time',
                "yaxis"     :   'GainAmp',
                "field"     :   amp_cal,
-               "figfile"   :   PREFIX+'-FS-AMP-R.png',
+               "plotfile"   :   PREFIX+'-FS-AMP-R.png',
            },
     input=INPUT,
     output=OUTPUT,
@@ -534,7 +535,7 @@ recipe.add('cab/casa_plotms', 'plot_fluxscale_amp_L',
                "xaxis"     :   'time',
                "yaxis"     :   'GainAmp',
                "field"     :   amp_cal,
-               "figfile"   :   PREFIX+'-FS-AMP-L.png',
+               "plotfile"   :   PREFIX+'-FS-AMP-L.png',
            },
     input=INPUT,
     output=OUTPUT,
@@ -634,8 +635,9 @@ recipe.add('cab/wsclean', 'image_target_field',
                "clean_iterations"  :   100000,
                "gain"          : 0.05,
                "mgain"         : 0.9, 
-               "joinchannels"  : true,
-               "taper_gaussian" : '60amin',
+               #"joinchannels"  : True,
+               #"channelsout"    : 10,
+               "taper-gaussian" : '2.3asec',
                "auto-threshold"     : 10,
                #"threshold"     : 0.0001, #Jy
                "prefix"        : LABEL,
@@ -668,6 +670,7 @@ except stimela.PipelineException as e:
 # w/o plotting 
 
 t = time.time()
+
 '''
 recipe.run([
            "quack_flagging",
@@ -696,6 +699,11 @@ print "1gc w/o plots done in %.2f sec" %(time.time() - t)
 # w plots
 
 recipe.run([
+    "image_target_field",
+])
+
+'''
+recipe.run([
     "quack_flagging",
     "autocorr_flagging",
     #           "antenna_flagging",
@@ -705,7 +713,7 @@ recipe.run([
     #          "mask",
     "plot_aflag_obsoverview",
     "plot_amp_uvdist",
-    "antenna_dropout",
+    "plot_antenna_dropout",
     "set_flux_scaling",
     "phase0",
     "plot_phasecal_amp_R",
@@ -733,5 +741,7 @@ recipe.run([
     "image_target_field",
     "split_target",
 ])
-  
+'''
+
 print "1gc w plots done in %.2f sec" %(time.time() - t)
+
