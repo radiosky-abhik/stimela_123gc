@@ -25,11 +25,11 @@ INPUT = "input"
 OUTPUT = "output"
 MSDIR  = "msdir"
 
-msname = "06MAY_RELTA_RRLL.MS"
+msname = "26_013_25aug2015_GMRT_16s.MS"
 PREFIX = msname[:-3]
 
 #SPW_phase_cal = "0:1100~6900" # centre band freqs
-SPW_delay_cal = "0:1100~6900" # clip start and end of the band
+SPW_delay_cal = "0:50~435" # clip start and end of the band
 
 
 # Calibration tables
@@ -40,20 +40,20 @@ BPASSCAL_TABLE = PREFIX + '.B0:output'
 DELAYCAL_TABLE = PREFIX + '.K0:output'
 
 
-LABEL = "ElaisN1_1gc_reduction"
+LABEL = "GALSYN_1gc_reduction"
 
-bandpass_cal = "0" # 3C286
-phase_cal = "1" # J1549+506
-target = "2" # ELAIS_N1
+bandpass_cal = "0" # 3C48
+phase_cal = "1" # 3C091
+target = "2" # GALSYN
 
-refant = "C10"
-BADANT = 'C00,C04,C11,C14' # GTAC Log File May be also C00, low signal
+refant = "C03"
+BADANT = 'W06' # Antenna 30
 
 # Image parameters
 
 npixno = 6144
 trimno = 4096
-cellarcsec = 1.5
+cellarcsec = 4.5
 
 ############################################################################
 
@@ -61,6 +61,21 @@ cellarcsec = 1.5
 stimela.register_globals()
 
 recipe = stimela.Recipe("GMRT LH reduction script", ms_dir=MSDIR)
+
+# Autoflagging (With Aoflagger) - This is supposed to flag RFI in the
+# data - good to flag prior to starting the calibration process.
+
+# Default AoFlagger
+
+recipe.add('cab/autoflagger', 'aoflag_data', 
+           {
+               "msname"    :   msname,
+               "column"    :   "DATA",
+               "strategy"  :  "low_freq.rfis",
+           },    
+    input=INPUT,
+    output=OUTPUT,    
+    label='aoflag_data:: Flag DATA column')
 
 # It is common for the array to require a small amount of time to
 # settle down at the start of a scan. Consequently, it has become
@@ -107,7 +122,7 @@ recipe.add("cab/casa_flagdata", "flag_bad_start_channels",
             "msname"    :   msname,
             "mode"      :   "manual",
             "field"     :   '',
-            "spw"       :   '0:0~300',
+            "spw"       :   '0:0~15',
             "autocorr"  :   True,
         },
     	input=INPUT, output=OUTPUT,
@@ -118,30 +133,17 @@ recipe.add("cab/casa_flagdata", "flag_bad_end_channels",
             "msname"    :   msname,
             "mode"      :   "manual",
             "field"     :   '',
-            "spw"       :   '0:7900~8191',
+            "spw"       :   '0:495~512',
             "autocorr"  :   True,
         },
     	input=INPUT, output=OUTPUT,
         label="flag_bandend:: Flag end of band")
 
-
-# Autoflagging (With Aoflagger) - This is supposed to flag RFI in the
-# data - good to flag prior to starting the calibration process.
-
-# Default AoFlagger
-
-recipe.add('cab/autoflagger', 'aoflag_data', 
-           {
-               "msname"    :   msname,
-               "column"    :   "DATA",
-           },    
-    input=INPUT,
-    output=OUTPUT,    
-    label='aoflag_data:: Flag DATA column')
-
 #######################################
 
 ## 1GC Calibration
+
+######################################
 
 recipe.add('cab/casa_setjy', 'set_flux_scaling', 
            {
@@ -156,13 +158,49 @@ recipe.add('cab/casa_setjy', 'set_flux_scaling',
     output = OUTPUT,
     label = 'set_flux_scaling:: Set flux density value for the amplitude calibrator')
 
+recipe.add("cab/casa_gaincal", "init_phase_cal",
+    {
+        "msname"        :   msname,
+        #"uvrange"       :  '>1klambda',  # Not using short baselines
+        "caltable"      :   PHASECAL_TABLE,
+        "field"         :   bandpass_cal,
+        "refant"        :   refant,
+        "gaintype"      :   'G',
+        "calmode"       :   'p',
+        "solint"        :   '85s',
+        "minsnr"        :   3,
+    },
+    input=INPUT, output=OUTPUT,
+    label="phase0:: Initial phase calibration")
+
+
+recipe.add('cab/casa_gaincal', 'delay_cal', 
+           {
+               "msname"       :   msname,
+               #"uvrange"       : '1~30klambda',       
+               "caltable"  :   DELAYCAL_TABLE,
+               "field"     :   bandpass_cal,
+               "refant"    :   refant,
+               "spw"       :   SPW_delay_cal,
+               "gaintype"  :   'K',
+               "solint"    :   'inf', #'5min',
+               "combine"   :   'scan',
+               "minsnr"    :   3, 
+               "gaintable" :   [PHASECAL_TABLE],
+           },
+
+    input=INPUT,
+    output=OUTPUT,
+    label = 'delay_cal:: Delay calibration')
+
+
 recipe.add("cab/casa_bandpass", "bandpass_cal",
     {   
         "msname"        :   msname, 
         #"uvrange"       : '1~30klambda', 
         "caltable"      :   BPASSCAL_TABLE,
         "field"         :   bandpass_cal,
-        "spw"           :   SPW_delay_cal,
+        "spw"           :   '',
         "refant"        :   refant,
         "combine"       :   'scan',
         "solint"        :   'inf', #'5min'
@@ -170,6 +208,8 @@ recipe.add("cab/casa_bandpass", "bandpass_cal",
         "solnorm"       :  True,
         "minblperant"   :   1,
         "minsnr"        :   3, 
+        "gaintable"     :   [PHASECAL_TABLE, DELAYCAL_TABLE],
+        "interp"       :   ['', ''],
     },
     input=INPUT, output=OUTPUT,
     label="bandpass:: First bandpass calibration")
@@ -247,15 +287,15 @@ recipe.add("cab/casa_gaincal", "main_gain_calibration",
         #"uvrange"       : '1~30klambda', 
         "caltable"      :   GAINCAL_TABLE,
         "field"        :   "%s,%s"%(phase_cal, bandpass_cal),
-        "spw"          :   SPW_delay_cal,
+        "spw"          :   '',
         "solint"       :   'inf',
         "refant"       :   refant,
         "gaintype"     :   'G',
         "calmode"      :   'ap',
         "solnorm"      :   False,
-        "gaintable"    :   [PHASECAL_TABLE,
+        "gaintable"    :   [DELAYCAL_TABLE,
                             BPASSCAL_TABLE],
-        "interp"       :   ['nearest', 'linear'],
+        "interp"       :   ['', ''],
     },
     input=INPUT, output=OUTPUT,
     label="gaincal:: Gain calibration")
@@ -342,7 +382,6 @@ recipe.add('cab/casa_plotcal', 'plot_fluxcal_phase_L',
     output=OUTPUT,
     label='plot_fluxcal_phase_L:: Plot fluxcal table. PHASE, L')
 
-
 ###########################
 
 # Apply calibration to BPCAL
@@ -355,7 +394,7 @@ recipe.add('cab/casa_applycal', 'applycal_bp',
         "gainfield" :   ['','',bandpass_cal],
         "interp"    :   ['','','linear'],
         "spw"       :   '',
-        "applymode" : 'calonly',
+        #"applymode" : 'calonly', # does not take the flagging of gain snr into account
         "calwt"     :   [False],
         "parang"    :   False,
     },
@@ -372,7 +411,7 @@ recipe.add('cab/casa_applycal', 'applycal_gcal',
         "gainfield" :   ['phase_cal','',''],
         "interp"    :   ['nearest','',''],
         "spw"       :   '',
-        "applymode" : 'calonly',
+        #"applymode" : 'calonly',
         "calwt"     :   [False],
         "parang"    :   False,
     },
@@ -389,7 +428,7 @@ recipe.add('cab/casa_applycal', 'applycal_tar',
         "gainfield" :   ['phase_cal','',''],
         "interp"    :   ['nearest','',''],
         "spw"       :   '',
-        "applymode" : 'calonly',
+        #"applymode" : 'calonly',
         "calwt"     :   [False],
         "parang"    :   False,
     },
@@ -546,7 +585,7 @@ recipe.add('cab/wsclean', 'image_target_field',
                "msname"        :   msname,
                "column"       : 'CORRECTED_DATA',
                "field"         :   target,
-               "channelrange"  :   [1100,6900],
+               "channelrange"  :   [15,495],
                "weight"        :   "briggs 0",               # Use Briggs weighting to weigh visibilities for imaging
                "npix"          :   npixno,                   # Image size in pixels
                "trim"          :   trimno,                    # To avoid aliasing
@@ -578,7 +617,7 @@ recipe.add('cab/wsclean', 'image_bandpass_field',
                "msname"        :   msname,
                "column"       : 'CORRECTED_DATA',
                "field"         : bandpass_cal,
-               "channelrange"  :   [1100,6900],
+               "channelrange"  :   [15,495],
                "weight"        :   "briggs 0",               # Use Briggs weighting to weigh visibilities for imaging
                "npix"          :   2048,                   # Image size in pixels
                "trim"          :   1024,                    # To avoid aliasing
@@ -595,7 +634,7 @@ recipe.add('cab/wsclean', 'image_bandpass_field',
                #"multiscale"   : True,
                #"fit-spectral-pol" : 4,
                #"taper-gaussian" : '2.3asec',
-               "auto-threshold"     : 10,
+               "auto-threshold"     : 5,
                "prefix"        : LABEL+'-bandpass',
                "no-update-model-required" : True,
            },
@@ -610,7 +649,7 @@ recipe.add('cab/wsclean', 'image_phasecal_field',
                "msname"        :   msname,
                "column"       : 'CORRECTED_DATA',
                "field"         :   phase_cal,
-               "channelrange"  :   [1100,6900],
+               "channelrange"  :   [15,495],
                "weight"        :   "briggs 0",               # Use Briggs weighting to weigh visibilities for imaging
                "npix"          :   2048,                   # Image size in pixels
                "trim"          :   1024,                    # To avoid aliasing
@@ -627,7 +666,7 @@ recipe.add('cab/wsclean', 'image_phasecal_field',
                #"multiscale"   : True,
                #"fit-spectral-pol" : 4,
                #"taper-gaussian" : '2.3asec',
-               "auto-threshold"     : 10,
+               "auto-threshold"     : 5,
                "prefix"        : LABEL+'-phasecal',
                "no-update-model-required" : True,
            },
@@ -641,13 +680,15 @@ t = time.time()
 # w plots
 
 recipe.run([
+    "aoflag_data",
     "quack_flagging",
     "autocorr_flagging",
     "antenna_flagging",
     "flag_bandstart",
     "flag_bandend", 
-    "aoflag_data",
     "set_flux_scaling", # setJy
+    "phase0",
+    "delay_cal",
     "bandpass", # bandpass
     "plot_bandpass_amp_R",
     "plot_bandpass_amp_L",
@@ -662,16 +703,16 @@ recipe.run([
     "applycal_bp",
     "applycal_gcal",
     "applycal_tar",
-    "aoflag_corrdata",
+    #"aoflag_corrdata",
     "plot_amp_phase_RR",
     "plot_amp_phase_LL", 
     "plot_target_freq_amp_RR",
     "plot_target_freq_amp_LL",
     "plot_target_time_amp_RR",
     "plot_target_time_amp_LL",
-#    "image_target_field",
-#    "image_bandpass_field",
-#    "image_phasecal_field",
+    "image_target_field",
+    "image_bandpass_field",
+    "image_phasecal_field",
 ])
 
 print "1gc w plots done in %.2f sec" %(time.time() - t)
