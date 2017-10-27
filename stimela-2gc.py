@@ -1,6 +1,8 @@
 import stimela
 import time, os, sys
 
+# Selfcal script with CASA clean mask, Pybdsm source extraction and MeqTrees gain calibration
+
 #I/O
 INPUT = 'input'
 MSDIR = 'msdir'
