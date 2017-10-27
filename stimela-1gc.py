@@ -29,7 +29,7 @@ msname = "26_013_25aug2015_GMRT_16s.MS"
 PREFIX = msname[:-3]
 
 #SPW_phase_cal = "0:1100~6900" # centre band freqs
-SPW_delay_cal = "0:50~435" # clip start and end of the band
+SPW_delay_cal = "0:50~435" # clip start and end of bands
 
 
 # Calibration tables
